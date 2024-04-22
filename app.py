@@ -33,7 +33,7 @@ def validate_token():
         headers = request.headers
         token = headers.get("Token")
         token = token.encode('utf-8')
-        if token in keys and keys[token]<datetime.now()+timedelta(hours=1):
+        if token in keys and keys[token]+timedelta(hours=1)<datetime.now():
                 return jsonify({ "message":"Valid Token" })
         else:
                 return jsonify({ "message":"Invalid Token" }), 400
@@ -60,9 +60,11 @@ def send_message():
                 if cipher_suite is None:
                         return jsonify({ "message": "Encryption failed" }), 400
                 data = request.get_json()
-                headers= request.headers
+                headers = request.headers
                 token = request.headers.get("Token")
-                token=  token.encode('utf-8')
+                token =  token.encode('utf-8')
+                if keys[token]+timedelta(hours = 1) > datetime.now():
+                    return jsonify({ "message":"Invalid Token" })
                 message = data["message"]
                 message_token = token + message.encode()
                 encrypted_message = cipher_suite.encrypt(message_token)
@@ -70,6 +72,7 @@ def send_message():
 
         except:
                 return jsonify({ "message": "Encryption failed" }), 400
+                
 @app.route('/receive-message', methods=['GET'])
 def receive_message():
         global cipher_suite
@@ -78,6 +81,8 @@ def receive_message():
                 encrypted_message = data["message"]
                 token = request.headers.get("Token")
                 token =token.encode('utf-8')
+                if keys[token]+timedelta(hours = 1) > datetime.now():
+                    return jsonify({ "message":"Invalid Token" })
                 decrypted_message = cipher_suite.decrypt(encrypted_message.encode())
                 decrypted_token = decrypted_message[:len(token)]
                 if decrypted_token == token:
