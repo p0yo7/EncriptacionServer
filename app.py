@@ -12,7 +12,7 @@ messages = {}
 # Hello World function
 @app.route('/', methods=['GET'])
 def hello_world():
-        now = dt.datetime.now()
+        now = datetime.now()
         return jsonify({ "message": f"It's: {now.strftime('%Y-%m-%d %H:%M:%S')}" })
 
 #Use token to make new token
